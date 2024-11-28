@@ -3,6 +3,10 @@ name = "roots_text"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+pipelines = []
+default = ["pipelines"]
+
 [dependencies]
 bytemuck = "1.20.0"
 cosmic-text = "0.12.1"
@@ -11,5 +15,6 @@ glam = "0.29.2"
 log = "0.4.22"
 lru = "0.12.5"
 roots_common = { version = "0.1.0", path = "../roots_common" }
+roots_renderer = { version = "0.1.0", path = "../roots_renderer" }
 rustc-hash = "2.0.0"
 wgpu = "23.0.1"
