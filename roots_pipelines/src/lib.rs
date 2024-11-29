@@ -1,5 +1,6 @@
 //====================================================================
 
+pub mod line_renderer;
 pub mod model_renderer;
 pub mod texture2d_renderer;
 

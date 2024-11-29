@@ -30,7 +30,7 @@ impl<'a> Default for RenderPipelineDescriptor<'a> {
     }
 }
 
-impl RenderPipelineDescriptor<'_> {
+impl<'a> RenderPipelineDescriptor<'a> {
     pub fn with_depth_stencil(mut self) -> Self {
         self.depth_stencil = Some(wgpu::DepthStencilState {
             format: Texture::DEPTH_FORMAT,
