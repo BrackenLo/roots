@@ -61,6 +61,8 @@ impl ModelRenderer {
         shared: &SharedRenderResources,
         lighting_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
+        log::debug!("Creating Model Renderer");
+
         let pipeline = tools::create_pipeline(
             device,
             config,

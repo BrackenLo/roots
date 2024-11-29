@@ -85,7 +85,8 @@ pub struct TextureRectVertex {
 impl Vertex for TextureRectVertex {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         const VERTEX_ATTRIBUTES: [wgpu::VertexAttribute; 2] = wgpu::vertex_attr_array![
-                0 => Float32x2, 1 => Float32x2
+            0 => Float32x2,
+            1 => Float32x2
         ];
 
         wgpu::VertexBufferLayout {
