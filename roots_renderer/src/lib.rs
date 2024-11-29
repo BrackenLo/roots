@@ -1,5 +1,7 @@
 //====================================================================
 
+use std::ops::{Deref, DerefMut};
+
 use roots_common::Size;
 use wgpu::SurfaceTarget;
 
@@ -9,6 +11,72 @@ pub mod model;
 pub mod shared;
 pub mod texture;
 pub mod tools;
+
+//====================================================================
+
+pub struct Device(wgpu::Device);
+impl Deref for Device {
+    type Target = wgpu::Device;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub struct Queue(wgpu::Queue);
+impl Deref for Queue {
+    type Target = wgpu::Queue;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub struct Surface<'a>(wgpu::Surface<'a>);
+impl<'a> Deref for Surface<'a> {
+    type Target = wgpu::Surface<'a>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub struct SurfaceConfig(wgpu::SurfaceConfiguration);
+impl Deref for SurfaceConfig {
+    type Target = wgpu::SurfaceConfiguration;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SurfaceConfig {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl SurfaceConfig {
+    #[inline]
+    pub fn resize(&mut self, new_size: impl Into<Size<u32>>) {
+        let size = new_size.into();
+
+        if size.width == 0 || size.height == 0 {
+            panic!(
+                "Invalid Window size. Must be non-zero. New Window size = {}",
+                size
+            );
+        }
+
+        self.width = size.width;
+        self.height = size.height;
+    }
+}
 
 //====================================================================
 
@@ -110,6 +178,16 @@ impl<'a> RenderCore<'a> {
             surface,
             config,
         })
+    }
+
+    #[inline]
+    pub fn break_down(self) -> (Device, Queue, Surface<'a>, SurfaceConfig) {
+        (
+            Device(self.device),
+            Queue(self.queue),
+            Surface(self.surface),
+            SurfaceConfig(self.config),
+        )
     }
 }
 

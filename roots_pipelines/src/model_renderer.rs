@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use roots_common::spatial::GlobalTransform;
 use roots_renderer::{
+    lighting::LightingManager,
     model::{LoadedMesh, MeshId, Model, ModelVertex},
     shared::{SharedRenderResources, Vertex},
     texture::{LoadedTexture, TextureId},
@@ -59,7 +60,7 @@ impl ModelRenderer {
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         shared: &SharedRenderResources,
-        lighting_bind_group_layout: &wgpu::BindGroupLayout,
+        lighting: &LightingManager,
     ) -> Self {
         log::debug!("Creating Model Renderer");
 
@@ -69,7 +70,7 @@ impl ModelRenderer {
             "Model Pipeline",
             &[
                 shared.camera_bind_group_layout(),
-                lighting_bind_group_layout,
+                lighting.bind_group_layout(),
                 shared.texture_bind_group_layout(),
             ],
             &[ModelVertex::desc(), ModelInstance::desc()],
