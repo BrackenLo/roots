@@ -104,3 +104,43 @@ pub fn tick_time(time: &mut Time) {
 }
 
 //====================================================================
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug)]
+pub struct WasmWrapper<T>(T);
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Debug)]
+pub struct WasmWrapper<T>(send_wrapper::SendWrapper<T>);
+
+impl<T> WasmWrapper<T> {
+    #[inline]
+    pub fn new(data: T) -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        return Self(data);
+
+        #[cfg(target_arch = "wasm32")]
+        return Self(send_wrapper::SendWrapper::new(data));
+    }
+
+    #[inline]
+    pub fn inner(&self) -> &T {
+        &self.0
+    }
+
+    #[inline]
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+
+    #[inline]
+    pub fn take(self) -> T {
+        #[cfg(not(target_arch = "wasm32"))]
+        return self.0;
+
+        #[cfg(target_arch = "wasm32")]
+        return self.0.take();
+    }
+}
+
+//====================================================================

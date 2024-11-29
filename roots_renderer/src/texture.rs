@@ -133,14 +133,18 @@ impl Texture {
 
     pub fn create_depth_texture(
         device: &wgpu::Device,
-        window_size: Size<u32>,
-        label: &str,
+        window_size: impl Into<Size<u32>>,
+        label: Option<&str>,
     ) -> Self {
+        let window_size = window_size.into();
+
         let size = wgpu::Extent3d {
             width: window_size.width,
             height: window_size.height,
             depth_or_array_layers: 1,
         };
+
+        let label = label.unwrap_or("default");
 
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some(&format!("Depth Texture: {}", label)),
@@ -275,10 +279,11 @@ impl Texture {
 
     pub fn from_size(
         device: &wgpu::Device,
-        size: Size<u32>,
+        size: impl Into<Size<u32>>,
         label: Option<&str>,
         sampler: Option<&wgpu::SamplerDescriptor>,
     ) -> Self {
+        let size = size.into();
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label,
             size: wgpu::Extent3d {

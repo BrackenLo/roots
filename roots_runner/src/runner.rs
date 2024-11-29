@@ -3,23 +3,9 @@
 use roots_common::Size;
 use winit::application::ApplicationHandler;
 
-use crate::{RunnerState, WindowInputEvent};
+use crate::{Runner, RunnerState, WindowInputEvent};
 
 //====================================================================
-
-pub struct Runner<S: RunnerState> {
-    state: Option<S>,
-}
-
-impl<S: RunnerState> Runner<S> {
-    #[inline]
-    pub fn run() {
-        winit::event_loop::EventLoop::new()
-            .unwrap()
-            .run_app(&mut Self { state: None })
-            .unwrap();
-    }
-}
 
 impl<S: RunnerState> ApplicationHandler for Runner<S> {
     #[inline]

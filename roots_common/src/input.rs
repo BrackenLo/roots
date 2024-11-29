@@ -51,18 +51,18 @@ where
     }
 }
 
-pub fn process_inputs<T>(input: &mut Input<T>, val: T, pressed: bool)
+pub fn process_inputs<T>(input: &mut Input<T>, button: T, pressed: bool)
 where
     T: Eq + Hash + Copy,
 {
     match pressed {
         true => {
-            input.pressed.insert(val);
-            input.just_pressed.insert(val);
+            input.pressed.insert(button);
+            input.just_pressed.insert(button);
         }
         false => {
-            input.pressed.remove(&val);
-            input.released.insert(val);
+            input.pressed.remove(&button);
+            input.released.insert(button);
         }
     }
 }

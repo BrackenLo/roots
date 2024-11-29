@@ -2,7 +2,7 @@
 
 use std::sync::{atomic::AtomicU32, Arc};
 
-use crate::{shared::Vertex, texture::LoadedTexture, tools};
+use crate::{shared::Vertex, tools};
 
 //====================================================================
 
@@ -80,36 +80,6 @@ impl Mesh {
 }
 
 //--------------------------------------------------
-
-#[derive(Clone)]
-pub struct Model {
-    pub meshes: Vec<(LoadedMesh, LoadedTexture)>,
-    pub color: [f32; 4],
-    pub scale: glam::Vec3,
-}
-
-impl Model {
-    #[inline]
-    pub fn from_mesh(mesh: LoadedMesh, texture: LoadedTexture) -> Self {
-        Self {
-            meshes: vec![(mesh, texture)],
-            color: [1., 1., 1., 1.],
-            scale: glam::Vec3::ONE,
-        }
-    }
-
-    #[inline]
-    pub fn with_color(mut self, color: [f32; 4]) -> Self {
-        self.color = color;
-        self
-    }
-
-    #[inline]
-    pub fn with_scale(mut self, scale: impl Into<glam::Vec3>) -> Self {
-        self.scale = scale.into();
-        self
-    }
-}
 
 //====================================================================
 

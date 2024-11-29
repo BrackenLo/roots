@@ -10,14 +10,14 @@ use winit::{
 
 pub use winit;
 pub mod prelude {
+    pub use crate::{window::Window, Runner, RunnerState};
+    pub use log::LevelFilter;
     pub use winit::{
         event::{DeviceEvent, DeviceId, MouseButton, StartCause, WindowEvent},
         event_loop::ActiveEventLoop,
         keyboard::KeyCode,
         window::WindowId,
     };
-
-    pub use crate::{runner::Runner, window::Window, RunnerState};
 }
 
 pub mod runner;
@@ -33,6 +33,42 @@ pub enum WindowInputEvent {
     CursorLeft,
     MouseWheel { delta: (f32, f32) },
     MouseMotion { delta: (f64, f64) },
+}
+
+//====================================================================
+
+pub struct Runner<S: RunnerState> {
+    state: Option<S>,
+}
+
+impl<S: RunnerState> Runner<S> {
+    #[inline]
+    pub fn run(initialise_logger: Option<&[(&str, log::LevelFilter)]>) {
+        if let Some(modules) = initialise_logger {
+            #[cfg(target_arch = "wasm32")]
+            {
+                std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+                console_log::init_with_level(log::Level::Warn).expect("Couldn't initialize logger");
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let mut builder = env_logger::Builder::new();
+                builder.filter_module(env!("CARGO_PKG_NAME"), log::LevelFilter::Trace);
+
+                modules
+                    .into_iter()
+                    .fold(&mut builder, |builder, (module, level)| {
+                        builder.filter_module(module, *level)
+                    })
+                    .init();
+            }
+        }
+
+        winit::event_loop::EventLoop::new()
+            .unwrap()
+            .run_app(&mut Self { state: None })
+            .unwrap();
+    }
 }
 
 pub trait RunnerState {

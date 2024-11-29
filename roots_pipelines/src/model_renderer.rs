@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use roots_common::spatial::GlobalTransform;
 use roots_renderer::{
     lighting::LightingManager,
-    model::{LoadedMesh, MeshId, Model, ModelVertex},
+    model::{LoadedMesh, MeshId, ModelVertex},
     shared::{SharedRenderResources, Vertex},
     texture::{LoadedTexture, TextureId},
     tools::{self, InstanceBuffer},
@@ -42,6 +42,12 @@ impl Vertex for ModelInstance {
             attributes: &VERTEX_ATTRIBUTES,
         }
     }
+}
+
+pub struct ModelData<'a> {
+    pub meshes: &'a [(LoadedMesh, LoadedTexture)],
+    pub color: [f32; 4],
+    pub scale: glam::Vec3,
 }
 
 //====================================================================
@@ -88,11 +94,11 @@ impl ModelRenderer {
         }
     }
 
-    pub fn prep(
+    pub fn prep<'a>(
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        data: &[(Model, GlobalTransform)],
+        data: impl IntoIterator<Item = (ModelData<'a>, &'a GlobalTransform)>,
     ) {
         let mut previous = self
             .instances

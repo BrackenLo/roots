@@ -61,23 +61,6 @@ impl DerefMut for SurfaceConfig {
     }
 }
 
-impl SurfaceConfig {
-    #[inline]
-    pub fn resize(&mut self, new_size: impl Into<Size<u32>>) {
-        let size = new_size.into();
-
-        if size.width == 0 || size.height == 0 {
-            panic!(
-                "Invalid Window size. Must be non-zero. New Window size = {}",
-                size
-            );
-        }
-
-        self.width = size.width;
-        self.height = size.height;
-    }
-}
-
 //====================================================================
 
 pub struct RenderCore<'a> {
@@ -188,6 +171,112 @@ impl<'a> RenderCore<'a> {
             Surface(self.surface),
             SurfaceConfig(self.config),
         )
+    }
+}
+
+//====================================================================
+
+pub struct RenderPassDesc<'a> {
+    pub use_depth: Option<&'a wgpu::TextureView>,
+    pub clear_color: Option<[f64; 4]>,
+}
+
+impl RenderPassDesc<'_> {
+    pub fn none() -> Self {
+        Self {
+            use_depth: None,
+            clear_color: None,
+        }
+    }
+}
+
+impl Default for RenderPassDesc<'_> {
+    fn default() -> Self {
+        Self {
+            use_depth: None,
+            clear_color: Some([0.2, 0.2, 0.2, 1.]),
+        }
+    }
+}
+
+//--------------------------------------------------
+
+pub use wgpu::SurfaceError;
+
+pub struct RenderEncoder {
+    surface_texture: wgpu::SurfaceTexture,
+    surface_view: wgpu::TextureView,
+    encoder: wgpu::CommandEncoder,
+}
+
+impl RenderEncoder {
+    pub fn new(device: &wgpu::Device, surface: &wgpu::Surface) -> Result<Self, wgpu::SurfaceError> {
+        let (surface_texture, surface_view) = match surface.get_current_texture() {
+            Ok(texture) => {
+                let view = texture
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+                (texture, view)
+            }
+            Err(e) => return Err(e),
+        };
+
+        let encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("Main Command Encoder"),
+        });
+
+        Ok(RenderEncoder {
+            surface_texture,
+            surface_view,
+            encoder,
+        })
+    }
+
+    pub fn finish(self, queue: &wgpu::Queue) {
+        queue.submit(Some(self.encoder.finish()));
+        self.surface_texture.present();
+    }
+
+    pub fn begin_render_pass(&mut self, desc: RenderPassDesc) -> wgpu::RenderPass {
+        // Clear the current depth buffer and use it.
+        let depth_stencil_attachment = match desc.use_depth {
+            Some(view) => Some(wgpu::RenderPassDepthStencilAttachment {
+                view,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.),
+                    store: wgpu::StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
+            None => None,
+        };
+
+        let load = match desc.clear_color {
+            Some(color) => wgpu::LoadOp::Clear(wgpu::Color {
+                r: color[0],
+                g: color[1],
+                b: color[2],
+                a: color[3],
+            }),
+            None => wgpu::LoadOp::Load,
+        };
+
+        let render_pass = self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Render Tools Basic Render Pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: &self.surface_view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load,
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+
+        render_pass
     }
 }
 
