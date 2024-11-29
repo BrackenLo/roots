@@ -24,7 +24,10 @@ impl SharedRenderResources {
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("Shared Texture 3d Bind Group Layout"),
-                entries: &[tools::bgl_texture_entry(0), tools::bgl_sampler_entry(1)],
+                entries: &[
+                    tools::bgl_entry(tools::BgEntryType::Texture, 0, wgpu::ShaderStages::FRAGMENT),
+                    tools::bgl_entry(tools::BgEntryType::Sampler, 1, wgpu::ShaderStages::FRAGMENT),
+                ],
             });
 
         let camera_bind_group_layout =

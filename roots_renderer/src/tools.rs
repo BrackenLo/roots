@@ -102,57 +102,44 @@ pub fn create_pipeline(
 
 //====================================================================
 
-/// bind group layout uniform entry
-pub fn bgl_uniform_entry(
+/// Bind Group Entry Type
+pub enum BgEntryType {
+    Uniform,
+    Storage,
+    Texture,
+    Sampler,
+}
+
+#[inline]
+pub fn bgl_entry(
+    entry_type: BgEntryType,
     binding: u32,
     visibility: wgpu::ShaderStages,
 ) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility,
-        ty: wgpu::BindingType::Buffer {
-            ty: wgpu::BufferBindingType::Uniform,
-            has_dynamic_offset: false,
-            min_binding_size: None,
-        },
-        count: None,
-    }
-}
+        ty: match entry_type {
+            BgEntryType::Uniform => wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
 
-pub fn bgl_storage_entry(
-    binding: u32,
-    visibility: wgpu::ShaderStages,
-) -> wgpu::BindGroupLayoutEntry {
-    wgpu::BindGroupLayoutEntry {
-        binding,
-        visibility,
-        ty: wgpu::BindingType::Buffer {
-            ty: wgpu::BufferBindingType::Storage { read_only: true },
-            has_dynamic_offset: false,
-            min_binding_size: None,
-        },
-        count: None,
-    }
-}
+            BgEntryType::Storage => wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
 
-pub fn bgl_texture_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
-    wgpu::BindGroupLayoutEntry {
-        binding,
-        visibility: wgpu::ShaderStages::FRAGMENT,
-        ty: wgpu::BindingType::Texture {
-            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-            view_dimension: wgpu::TextureViewDimension::D2,
-            multisampled: false,
-        },
-        count: None,
-    }
-}
+            BgEntryType::Texture => wgpu::BindingType::Texture {
+                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                view_dimension: wgpu::TextureViewDimension::D2,
+                multisampled: false,
+            },
 
-pub fn bgl_sampler_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
-    wgpu::BindGroupLayoutEntry {
-        binding,
-        visibility: wgpu::ShaderStages::FRAGMENT,
-        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+            BgEntryType::Sampler => wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+        },
         count: None,
     }
 }
@@ -162,6 +149,7 @@ pub enum BufferType {
     Index,
     Instance,
     Uniform,
+    Storage,
 }
 
 pub fn buffer<D: bytemuck::Pod>(
@@ -180,6 +168,10 @@ pub fn buffer<D: bytemuck::Pod>(
         BufferType::Uniform => (
             "Uniform",
             wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        ),
+        BufferType::Storage => (
+            "Storage",
+            wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         ),
     };
 

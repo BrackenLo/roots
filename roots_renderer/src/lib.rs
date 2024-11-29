@@ -4,6 +4,7 @@ use roots_common::Size;
 use wgpu::SurfaceTarget;
 
 pub mod camera;
+pub mod lighting;
 pub mod shared;
 pub mod texture;
 pub mod tools;

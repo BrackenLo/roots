@@ -1310,6 +1310,7 @@ dependencies = [
  "log",
  "lru",
  "roots_common",
+ "roots_renderer",
  "rustc-hash 2.0.0",
  "wgpu",
 ]
