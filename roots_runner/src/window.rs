@@ -16,6 +16,29 @@ impl Window {
             .create_window(window_attributes.unwrap_or_default())
             .unwrap();
 
+        #[cfg(target_arch = "wasm32")]
+        {
+            use winit::{dpi::PhysicalSize, platform::web::WindowExtWebSys};
+
+            log::info!("Adding canvas to window");
+
+            if let None = window.request_inner_size(PhysicalSize::new(450, 400)) {
+                log::warn!(
+                    "Wasm Window Resize Warning: Got none when requesting window inner size"
+                );
+            }
+
+            web_sys::window()
+                .and_then(|win| win.document())
+                .and_then(|doc| {
+                    let dst = doc.get_element_by_id("app")?;
+                    let canvas = web_sys::Element::from(window.canvas()?);
+                    dst.append_child(&canvas).ok()?;
+                    Some(())
+                })
+                .expect("Couldn't append canvas to document body.");
+        }
+
         Self(Arc::new(window))
     }
 
