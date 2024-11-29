@@ -1,11 +1,11 @@
 //====================================================================
 
-use std::sync::atomic::AtomicU32;
+use std::sync::{atomic::AtomicU32, Arc};
 
 use image::GenericImageView;
 use roots_common::Size;
 
-use crate::shared::SharedRenderResources;
+use crate::shared::{SharedRenderResources, Vertex};
 
 //====================================================================
 
@@ -13,11 +13,10 @@ pub type TextureId = u32;
 
 static CURRENT_TEXTURE_ID: AtomicU32 = AtomicU32::new(0);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoadedTexture {
     id: TextureId,
-    texture: Texture,
-    bind_group: wgpu::BindGroup,
+    texture: Arc<(Texture, wgpu::BindGroup)>,
 }
 
 impl LoadedTexture {
@@ -30,9 +29,25 @@ impl LoadedTexture {
         let bind_group = shared.create_texture_bind_group(device, &texture, None);
         Self {
             id,
-            texture,
-            bind_group,
+            texture: Arc::new((texture, bind_group)),
         }
+    }
+
+    #[inline]
+    pub fn load_blank(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        shared: &SharedRenderResources,
+    ) -> Self {
+        let texture = Texture::from_color(
+            device,
+            queue,
+            [255, 255, 255],
+            Some("Default Blank Texture"),
+            None,
+        );
+
+        Self::load_texture(device, shared, texture)
     }
 
     #[inline]
@@ -42,12 +57,12 @@ impl LoadedTexture {
 
     #[inline]
     pub fn texture(&self) -> &Texture {
-        &self.texture
+        &self.texture.0
     }
 
     #[inline]
     pub fn bind_group(&self) -> &wgpu::BindGroup {
-        &self.bind_group
+        &self.texture.1
     }
 }
 
@@ -57,6 +72,51 @@ impl PartialEq for LoadedTexture {
         self.id == other.id
     }
 }
+
+//====================================================================
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Zeroable, bytemuck::Pod)]
+pub struct TextureRectVertex {
+    pos: [f32; 2],
+    uv: [f32; 2],
+}
+
+impl Vertex for TextureRectVertex {
+    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        const VERTEX_ATTRIBUTES: [wgpu::VertexAttribute; 2] = wgpu::vertex_attr_array![
+                0 => Float32x2, 1 => Float32x2
+        ];
+
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<TextureRectVertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &VERTEX_ATTRIBUTES,
+        }
+    }
+}
+
+pub const TEXTURE_RECT_VERTICES: [TextureRectVertex; 4] = [
+    TextureRectVertex {
+        pos: [-0.5, 0.5],
+        uv: [0., 0.],
+    },
+    TextureRectVertex {
+        pos: [-0.5, -0.5],
+        uv: [0., 1.],
+    },
+    TextureRectVertex {
+        pos: [0.5, 0.5],
+        uv: [1., 0.],
+    },
+    TextureRectVertex {
+        pos: [0.5, -0.5],
+        uv: [1., 1.],
+    },
+];
+
+pub const TEXTURE_RECT_INDICES: [u16; 6] = [0, 1, 3, 0, 3, 2];
+pub const TEXTURE_RECT_INDEX_COUNT: u32 = TEXTURE_RECT_INDICES.len() as u32;
 
 //====================================================================
 

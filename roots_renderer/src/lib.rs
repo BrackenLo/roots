@@ -5,6 +5,7 @@ use wgpu::SurfaceTarget;
 
 pub mod camera;
 pub mod lighting;
+pub mod model;
 pub mod shared;
 pub mod texture;
 pub mod tools;

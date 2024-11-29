@@ -1285,6 +1285,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "roots_pipelines"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "glam",
+ "log",
+ "roots_common",
+ "roots_renderer",
+ "wgpu",
+]
+
+[[package]]
 name = "roots_renderer"
 version = "0.1.0"
 dependencies = [

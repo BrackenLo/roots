@@ -231,6 +231,7 @@ pub fn create_instance_buffer<T: bytemuck::Pod>(
 
 //====================================================================
 
+#[derive(Debug)]
 pub struct InstanceBuffer<T> {
     phantom: PhantomData<T>,
     buffer: wgpu::Buffer,
@@ -268,6 +269,14 @@ impl<T: bytemuck::Pod> InstanceBuffer<T> {
     #[inline]
     pub fn buffer(&self) -> &wgpu::Buffer {
         &self.buffer
+    }
+
+    #[inline]
+    pub fn slice<S>(&self, bounds: S) -> wgpu::BufferSlice<'_>
+    where
+        S: std::ops::RangeBounds<wgpu::BufferAddress>,
+    {
+        self.buffer.slice(bounds)
     }
 
     #[inline]

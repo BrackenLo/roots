@@ -24,18 +24,16 @@ impl Default for GlobalLightData {
 #[repr(C)]
 #[derive(bytemuck::Pod, bytemuck::Zeroable, Clone, Copy, Debug, Default)]
 pub struct LightInstance {
-    position: glam::Vec3,
-    direction: glam::Vec3,
-    padding: [u32; 2],
+    position: glam::Vec4,
+    direction: glam::Vec4,
     diffuse: glam::Vec4,
     specular: glam::Vec4,
 }
 
 impl LightInstance {
     const ZERO: LightInstance = LightInstance {
-        position: glam::Vec3::ZERO,
-        direction: glam::Vec3::ZERO,
-        padding: [0, 0],
+        position: glam::Vec4::ZERO,
+        direction: glam::Vec4::ZERO,
         diffuse: glam::Vec4::ZERO,
         specular: glam::Vec4::ZERO,
     };
