@@ -1,0 +1,9 @@
+[package]
+name = "roots_runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4.22"
+roots_common = { version = "0.1.0", path = "../roots_common" }
+winit = "0.30.5"
