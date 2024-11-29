@@ -99,9 +99,7 @@ impl<S: RunnerState> ApplicationHandler for Runner<S> {
 
                 //--------------------------------------------------
                 //
-                winit::event::WindowEvent::RedrawRequested => {
-                    runner_state.redraw_requested(event_loop)
-                }
+                winit::event::WindowEvent::RedrawRequested => runner_state.tick(event_loop),
 
                 //--------------------------------------------------
                 //

@@ -67,7 +67,7 @@ pub trait RunnerState {
         event_loop.exit();
     }
 
-    fn redraw_requested(&mut self, event_loop: &ActiveEventLoop);
+    fn tick(&mut self, event_loop: &ActiveEventLoop);
 }
 
 //====================================================================
