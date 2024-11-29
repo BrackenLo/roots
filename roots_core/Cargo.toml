@@ -1,0 +1,10 @@
+[package]
+name = "roots_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+roots_common.path = "../roots_common"
+roots_pipelines.path = "../roots_pipelines"
+roots_renderer.path = "../roots_renderer"
+roots_text.path = "../roots_text"

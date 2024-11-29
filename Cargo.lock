@@ -1285,6 +1285,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "roots_core"
+version = "0.1.0"
+dependencies = [
+ "roots_common",
+ "roots_pipelines",
+ "roots_renderer",
+ "roots_text",
+]
+
+[[package]]
 name = "roots_pipelines"
 version = "0.1.0"
 dependencies = [
