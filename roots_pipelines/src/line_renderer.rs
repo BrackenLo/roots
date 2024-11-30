@@ -156,6 +156,10 @@ impl LineRenderer {
     }
 
     pub fn render(&self, pass: &mut wgpu::RenderPass, camera_bind_group: &wgpu::BindGroup) {
+        if self.instance_count == 0 {
+            return;
+        }
+
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, camera_bind_group, &[]);
 

@@ -1,6 +1,10 @@
 //====================================================================
 
-use std::{fmt::Display, hash::BuildHasherDefault};
+use std::{
+    fmt::Display,
+    hash::BuildHasherDefault,
+    ops::{Deref, DerefMut},
+};
 
 use rustc_hash::FxHasher;
 use web_time::{Duration, Instant};
@@ -124,22 +128,28 @@ impl<T> WasmWrapper<T> {
     }
 
     #[inline]
-    pub fn inner(&self) -> &T {
-        &self.0
-    }
-
-    #[inline]
-    pub fn inner_mut(&mut self) -> &mut T {
-        &mut self.0
-    }
-
-    #[inline]
     pub fn take(self) -> T {
         #[cfg(not(target_arch = "wasm32"))]
         return self.0;
 
         #[cfg(target_arch = "wasm32")]
         return self.0.take();
+    }
+}
+
+impl<T> Deref for WasmWrapper<T> {
+    type Target = T;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for WasmWrapper<T> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

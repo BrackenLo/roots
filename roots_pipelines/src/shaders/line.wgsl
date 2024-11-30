@@ -13,7 +13,7 @@ struct Camera {
 struct VertexIn {
     // Vertex
     @builtin(vertex_index) index: u32,
-    @location(0) vertex_position: vec3<f32>
+    @location(0) vertex_position: vec3<f32>,
 
     // Instance
     @location(1) color: vec4<f32>,
@@ -34,13 +34,15 @@ fn vs_main(in: VertexIn) -> VertexOut {
     var out: VertexOut;
 
     if in.index < 4 {
-        out.clip_position = in.vertex_position * in.thickness + in.pos1;
+        out.clip_position = vec4<f32>(in.vertex_position * in.thickness + in.pos1, 1);
     }
     else {
-        out.clip_position = in.vertex_position * in.thickness + in.pos2;
+        out.clip_position = vec4<f32>(in.vertex_position * in.thickness + in.pos2, 1);
     }
 
     out.color = in.color;
+
+    return out;
 }
 
 //====================================================================

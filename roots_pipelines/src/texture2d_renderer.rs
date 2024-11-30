@@ -108,7 +108,12 @@ impl Texture2dRenderer {
         }
     }
 
-    pub fn prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, data: &[TextureData]) {
+    pub fn prep<'a>(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        data: impl IntoIterator<Item = TextureData<'a>>,
+    ) {
         let mut previous = self.instances.keys().map(|id| *id).collect::<HashSet<_>>();
 
         let instances = data.into_iter().fold(HashMap::new(), |mut acc, data| {
