@@ -2,13 +2,13 @@
 
 use std::collections::{HashMap, HashSet};
 
-use roots_common::spatial::GlobalTransform;
+use roots_common::FastHasher;
 use roots_renderer::{
     lighting::LightingManager,
     model::{LoadedMesh, MeshId, ModelVertex},
     shared::{SharedRenderResources, Vertex},
     texture::{LoadedTexture, TextureId},
-    tools::{self, InstanceBuffer},
+    tools::{self},
 };
 
 //====================================================================
@@ -50,14 +50,19 @@ pub struct ModelData<'a> {
     pub scale: glam::Vec3,
 }
 
+pub struct MeshInstance<'a> {
+    pub mesh: &'a LoadedMesh,
+    pub texture: &'a LoadedTexture,
+}
+
 //====================================================================
 
 #[derive(Debug)]
 pub struct ModelRenderer {
     pipeline: wgpu::RenderPipeline,
 
-    texture_storage: HashMap<u32, LoadedTexture>,
-    mesh_storage: HashMap<u32, LoadedMesh>,
+    texture_storage: HashMap<u32, LoadedTexture, FastHasher>,
+    mesh_storage: HashMap<u32, LoadedMesh, FastHasher>,
     instances: HashMap<MeshId, HashMap<TextureId, tools::InstanceBuffer<ModelInstance>>>,
 }
 
@@ -98,7 +103,7 @@ impl ModelRenderer {
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        data: impl IntoIterator<Item = (ModelData<'a>, &'a GlobalTransform)>,
+        data: impl IntoIterator<Item = (ModelData<'a>, glam::Mat4)>,
     ) {
         let mut previous = self
             .instances
@@ -139,7 +144,7 @@ impl ModelRenderer {
                             Vec::new()
                         })
                         .push(ModelInstance {
-                            transform: transform.to_matrix(),
+                            transform,
                             color: model.color.into(),
                             normal: normal_matrix,
                             scale: model.scale,
@@ -158,7 +163,7 @@ impl ModelRenderer {
                     .or_insert(HashMap::default())
                     .entry(texture_id)
                     .and_modify(|instance| instance.update(device, queue, &raw))
-                    .or_insert_with(|| InstanceBuffer::new(device, &raw));
+                    .or_insert_with(|| tools::InstanceBuffer::new(device, &raw));
             });
         });
 

@@ -3,7 +3,7 @@
 use std::sync::{atomic::AtomicU32, Arc};
 
 use image::GenericImageView;
-use roots_common::{Size, WasmWrapper};
+use roots_common::Size;
 
 use crate::shared::{SharedRenderResources, Vertex};
 
@@ -16,7 +16,7 @@ static CURRENT_TEXTURE_ID: AtomicU32 = AtomicU32::new(0);
 #[derive(Debug, Clone)]
 pub struct LoadedTexture {
     id: TextureId,
-    texture: Arc<WasmWrapper<(Texture, wgpu::BindGroup)>>,
+    texture: Arc<(Texture, wgpu::BindGroup)>,
 }
 
 impl LoadedTexture {
@@ -29,7 +29,7 @@ impl LoadedTexture {
         let bind_group = shared.create_texture_bind_group(device, &texture, None);
         Self {
             id,
-            texture: Arc::new(WasmWrapper::new((texture, bind_group))),
+            texture: Arc::new((texture, bind_group)),
         }
     }
 

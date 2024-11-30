@@ -2,8 +2,6 @@
 
 use std::sync::{atomic::AtomicU32, Arc};
 
-use roots_common::WasmWrapper;
-
 use crate::{shared::Vertex, tools};
 
 //====================================================================
@@ -15,7 +13,7 @@ static CURRENT_MESH_ID: AtomicU32 = AtomicU32::new(0);
 #[derive(Clone, Debug)]
 pub struct LoadedMesh {
     id: MeshId,
-    mesh: Arc<WasmWrapper<Mesh>>,
+    mesh: Arc<Mesh>,
 }
 
 impl LoadedMesh {
@@ -24,7 +22,7 @@ impl LoadedMesh {
         let id = CURRENT_MESH_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Self {
             id,
-            mesh: Arc::new(WasmWrapper::new(mesh)),
+            mesh: Arc::new(mesh),
         }
     }
 
