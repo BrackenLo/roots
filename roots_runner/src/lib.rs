@@ -43,8 +43,8 @@ pub struct Runner<S: RunnerState> {
 
 impl<S: RunnerState> Runner<S> {
     #[inline]
-    pub fn run(initialise_logger: Option<&[(&str, log::LevelFilter)]>) {
-        if let Some(modules) = initialise_logger {
+    pub fn run(logger_modules: Option<&[(&str, log::LevelFilter)]>) {
+        if let Some(modules) = logger_modules {
             #[cfg(target_arch = "wasm32")]
             {
                 std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -52,15 +52,16 @@ impl<S: RunnerState> Runner<S> {
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let mut builder = env_logger::Builder::new();
-                builder.filter_module(env!("CARGO_PKG_NAME"), log::LevelFilter::Trace);
+                if !modules.is_empty() {
+                    let mut builder = env_logger::builder();
 
-                modules
-                    .into_iter()
-                    .fold(&mut builder, |builder, (module, level)| {
-                        builder.filter_module(module, *level)
-                    })
-                    .init();
+                    modules
+                        .into_iter()
+                        .fold(&mut builder, |builder, (module, level)| {
+                            builder.filter_module(module, *level)
+                        })
+                        .init();
+                }
             }
         }
 

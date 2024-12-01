@@ -201,7 +201,7 @@ impl ModelRenderer {
             instance.iter().for_each(|(texture_id, instance)| {
                 let texture = self.texture_storage.get(texture_id).unwrap();
 
-                pass.set_bind_group(1, texture.bind_group(), &[]);
+                pass.set_bind_group(2, texture.bind_group(), &[]);
                 pass.set_vertex_buffer(1, instance.slice(..));
                 pass.draw_indexed(0..mesh.index_count(), 0, 0..instance.count());
             });

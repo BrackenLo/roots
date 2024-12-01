@@ -101,7 +101,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
     var sum_specular = vec3<f32>();
 
     for (var i = 0; i < light_count; i += 1) {
-
         // Calculate Diffuse Color
         let norm = normalize(in.normal);
         let light_dir = normalize(light_array[i].position.xyz - in.position);

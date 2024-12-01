@@ -95,7 +95,7 @@ impl<'a> RenderCore<'a> {
         window: impl Into<SurfaceTarget<'a>>,
         window_size: Size<u32>,
     ) -> anyhow::Result<Self> {
-        log::debug!("Creating core wgpu renderer components.");
+        log::info!("Creating core wgpu renderer components.");
 
         log::debug!("Window inner size = {:?}", window_size);
 

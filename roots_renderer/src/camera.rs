@@ -15,6 +15,8 @@ impl Camera {
         data: &C,
         camera_bind_group_layout: &wgpu::BindGroupLayout,
     ) -> Self {
+        log::trace!("Creating new camera of type {}", std::any::type_name::<C>());
+
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera buffer"),
             contents: bytemuck::cast_slice(&[data.get_camera_uniform(&glam::Affine3A::IDENTITY)]),

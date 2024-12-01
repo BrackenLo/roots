@@ -52,6 +52,8 @@ pub struct LightingManager {
 
 impl LightingManager {
     pub fn new(device: &wgpu::Device) -> Self {
+        log::debug!("Creating lighting manager");
+
         let globals_uniform = tools::buffer(
             device,
             tools::BufferType::Uniform,

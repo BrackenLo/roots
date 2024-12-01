@@ -21,6 +21,8 @@ pub struct SharedRenderResources {
 
 impl SharedRenderResources {
     pub fn new(device: &wgpu::Device) -> Self {
+        log::debug!("Creating shared render resources");
+
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("Shared Texture 3d Bind Group Layout"),

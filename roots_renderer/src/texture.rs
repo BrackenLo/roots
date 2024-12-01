@@ -137,6 +137,7 @@ impl Texture {
         label: Option<&str>,
     ) -> Self {
         let window_size = window_size.into();
+        log::trace!("Creating depth texture with size {}", window_size);
 
         let size = wgpu::Extent3d {
             width: window_size.width,

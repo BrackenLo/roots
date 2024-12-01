@@ -1,4 +1,11 @@
 [workspace]
 resolver = "2"
 
-members = [ "roots_common", "roots_core", "roots_pipelines","roots_renderer", "roots_runner", "roots_text"]
+members = [
+  "roots_common",
+  "roots_core",
+  "roots_pipelines",
+  "roots_renderer",
+  "roots_runner",
+  "roots_text",
+]
