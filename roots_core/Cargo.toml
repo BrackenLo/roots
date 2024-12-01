@@ -3,8 +3,12 @@ name = "roots_core"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+hecs = ["roots_hecs"]
+
 [dependencies]
 roots_common.path = "../roots_common"
+roots_hecs = { path = "../roots_hecs", optional = true }
 roots_pipelines.path = "../roots_pipelines"
 roots_renderer.path = "../roots_renderer"
 roots_runner.path = "../roots_runner"

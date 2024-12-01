@@ -99,6 +99,11 @@ impl ModelRenderer {
         }
     }
 
+    #[inline]
+    pub fn has_instances_to_render(&self) -> bool {
+        !self.mesh_storage.is_empty() || !self.texture_storage.is_empty()
+    }
+
     pub fn prep<'a>(
         &mut self,
         device: &wgpu::Device,

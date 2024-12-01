@@ -4,6 +4,7 @@ resolver = "2"
 members = [
   "roots_common",
   "roots_core",
+  "roots_hecs",
   "roots_pipelines",
   "roots_renderer",
   "roots_runner",

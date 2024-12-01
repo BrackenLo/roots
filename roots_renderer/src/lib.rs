@@ -178,7 +178,7 @@ impl<'a> RenderCore<'a> {
 
 pub struct RenderPassDesc<'a> {
     pub use_depth: Option<&'a wgpu::TextureView>,
-    pub clear_color: Option<[f64; 4]>,
+    pub clear_color: Option<Color>,
 }
 
 impl RenderPassDesc<'_> {
@@ -194,8 +194,54 @@ impl Default for RenderPassDesc<'_> {
     fn default() -> Self {
         Self {
             use_depth: None,
-            clear_color: Some([0.2, 0.2, 0.2, 1.]),
+            clear_color: Some(Color::new(0.2, 0.2, 0.2, 1.)),
         }
+    }
+}
+
+pub struct RenderPass<'a>(wgpu::RenderPass<'a>);
+
+impl<'a> Deref for RenderPass<'a> {
+    type Target = wgpu::RenderPass<'a>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> DerefMut for RenderPass<'a> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+//--------------------------------------------------
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct Color(wgpu::Color);
+
+impl Deref for Color {
+    type Target = wgpu::Color;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Color {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Color {
+    #[inline]
+    pub fn new(r: f64, g: f64, b: f64, a: f64) -> Self {
+        Self(wgpu::Color { r, g, b, a })
     }
 }
 
@@ -237,7 +283,7 @@ impl RenderEncoder {
         self.surface_texture.present();
     }
 
-    pub fn begin_render_pass(&mut self, desc: RenderPassDesc) -> wgpu::RenderPass {
+    pub fn begin_render_pass(&mut self, desc: RenderPassDesc) -> RenderPass {
         // Clear the current depth buffer and use it.
         let depth_stencil_attachment = match desc.use_depth {
             Some(view) => Some(wgpu::RenderPassDepthStencilAttachment {
@@ -252,12 +298,7 @@ impl RenderEncoder {
         };
 
         let load = match desc.clear_color {
-            Some(color) => wgpu::LoadOp::Clear(wgpu::Color {
-                r: color[0],
-                g: color[1],
-                b: color[2],
-                a: color[3],
-            }),
+            Some(color) => wgpu::LoadOp::Clear(color.0),
             None => wgpu::LoadOp::Load,
         };
 
@@ -276,7 +317,7 @@ impl RenderEncoder {
             occlusion_query_set: None,
         });
 
-        render_pass
+        RenderPass(render_pass)
     }
 }
 

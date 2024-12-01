@@ -1,0 +1,14 @@
+[package]
+name = "roots_hecs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+glam = "0.29.2"
+hecs = { version = "0.10.5", features = ["macros"] }
+log = "0.4.22"
+pollster = "0.4.0"
+roots_common = { version = "0.1.0", path = "../roots_common" }
+roots_pipelines = { version = "0.1.0", path = "../roots_pipelines" }
+roots_renderer = { version = "0.1.0", path = "../roots_renderer" }
+roots_runner = { version = "0.1.0", path = "../roots_runner" }
