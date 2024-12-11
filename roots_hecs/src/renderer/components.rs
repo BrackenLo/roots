@@ -31,8 +31,8 @@ impl Model {
     }
 
     #[inline]
-    pub fn with_scale(mut self, scale: glam::Vec3) -> Self {
-        self.scale = scale;
+    pub fn with_scale(mut self, scale: impl Into<glam::Vec3>) -> Self {
+        self.scale = scale.into();
         self
     }
 }

@@ -44,12 +44,13 @@ impl Pipeline for ModelRenderer {
         Self::new(&state.device, &state.config, &state.shared, &state.lighting)
     }
 
+    #[inline]
     fn prep(&mut self, state: &RendererState, world: &mut World) {
-        let data = world
+        world
             .query_mut::<(&Model, &GlobalTransform)>()
             .into_iter()
-            .map(|(_, (model, global))| {
-                (
+            .for_each(|(_, (model, global))| {
+                self.prep_model(
                     ModelData {
                         meshes: &model.meshes,
                         color: model.color,
@@ -57,10 +58,9 @@ impl Pipeline for ModelRenderer {
                     },
                     global.to_matrix(),
                 )
-            })
-            .collect::<Vec<_>>();
+            });
 
-        self.prep(&state.device, &state.queue, data);
+        self.finish_prep(&state.device, &state.queue);
     }
 
     fn render(&mut self, render_pass: &mut RenderPass, state: &RendererState, world: &mut World) {
@@ -92,19 +92,21 @@ impl Pipeline for Texture2dRenderer {
         Self::new(&state.device, &state.config, &state.shared)
     }
 
+    #[inline]
     fn prep(&mut self, state: &RendererState, world: &mut World) {
-        let data = world
+        world
             .query_mut::<&Sprite>()
             .into_iter()
-            .map(|(_, sprite)| TextureData {
-                texture: &sprite.texture,
-                size: sprite.size,
-                pos: sprite.pos,
-                color: sprite.color,
-            })
-            .collect::<Vec<_>>();
+            .for_each(|(_, sprite)| {
+                self.prep_texture(TextureData {
+                    texture: &sprite.texture,
+                    size: sprite.size,
+                    pos: sprite.pos,
+                    color: sprite.color,
+                })
+            });
 
-        self.prep(&state.device, &state.queue, data);
+        self.finish_prep(&state.device, &state.queue);
     }
 
     fn render(&mut self, render_pass: &mut RenderPass, _state: &RendererState, world: &mut World) {
@@ -128,17 +130,14 @@ impl Pipeline for LineRenderer {
         Self::new(&state.device, &state.config, &state.shared)
     }
 
+    #[inline]
     fn prep(&mut self, state: &RendererState, world: &mut World) {
-        let data =
-            world
-                .query_mut::<&LineBundle>()
-                .into_iter()
-                .fold(Vec::new(), |mut acc, (_, line)| {
-                    acc.extend_from_slice(&line.lines);
-                    acc
-                });
+        world
+            .query_mut::<&LineBundle>()
+            .into_iter()
+            .for_each(|(_, line)| self.prep_lines(&line.lines));
 
-        self.prep(&state.device, &state.queue, &data);
+        self.finish_prep(&state.device, &state.queue);
     }
 
     fn render(&mut self, render_pass: &mut RenderPass, _state: &RendererState, world: &mut World) {

@@ -90,6 +90,8 @@ pub struct LineRenderer {
 
     instance_buffer: wgpu::Buffer,
     instance_count: u32,
+
+    to_prep: Vec<LineInstance>,
 }
 
 impl LineRenderer {
@@ -140,19 +142,27 @@ impl LineRenderer {
             index_count,
             instance_buffer,
             instance_count,
+            to_prep: Vec::new(),
         }
     }
 
     #[inline]
-    pub fn prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, lines: &[LineInstance]) {
+    pub fn prep_lines(&mut self, line: &[LineInstance]) {
+        self.to_prep.extend_from_slice(line)
+    }
+
+    #[inline]
+    pub fn finish_prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
         tools::update_instance_buffer(
             device,
             queue,
             "Line",
             &mut self.instance_buffer,
             &mut self.instance_count,
-            lines,
+            &self.to_prep,
         );
+
+        self.to_prep.clear();
     }
 
     pub fn render(&self, pass: &mut wgpu::RenderPass, camera_bind_group: &wgpu::BindGroup) {

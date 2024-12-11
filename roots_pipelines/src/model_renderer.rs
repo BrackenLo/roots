@@ -61,9 +61,10 @@ pub struct MeshInstance<'a> {
 pub struct ModelRenderer {
     pipeline: wgpu::RenderPipeline,
 
+    to_prep: HashMap<MeshId, HashMap<TextureId, Vec<ModelInstance>>>,
+    instances: HashMap<MeshId, HashMap<TextureId, tools::InstanceBuffer<ModelInstance>>>,
     texture_storage: HashMap<u32, LoadedTexture, FastHasher>,
     mesh_storage: HashMap<u32, LoadedMesh, FastHasher>,
-    instances: HashMap<MeshId, HashMap<TextureId, tools::InstanceBuffer<ModelInstance>>>,
 }
 
 impl ModelRenderer {
@@ -93,9 +94,11 @@ impl ModelRenderer {
 
         Self {
             pipeline,
+
+            to_prep: HashMap::default(),
+            instances: HashMap::default(),
             texture_storage: HashMap::default(),
             mesh_storage: HashMap::default(),
-            instances: HashMap::default(),
         }
     }
 
@@ -104,12 +107,37 @@ impl ModelRenderer {
         !self.mesh_storage.is_empty() || !self.texture_storage.is_empty()
     }
 
-    pub fn prep<'a>(
-        &mut self,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        data: impl IntoIterator<Item = (ModelData<'a>, glam::Mat4)>,
-    ) {
+    pub fn prep_model(&mut self, model: ModelData, transform: glam::Mat4) {
+        model.meshes.iter().for_each(|(mesh, texture)| {
+            let mesh_entry = self.to_prep.entry(mesh.id()).or_insert_with(|| {
+                if !self.mesh_storage.contains_key(&mesh.id()) {
+                    self.mesh_storage.insert(mesh.id(), mesh.clone());
+                }
+
+                HashMap::new()
+            });
+
+            let rotation = transform.to_scale_rotation_translation().1;
+            let normal_matrix = glam::Mat3::from_quat(rotation);
+
+            mesh_entry
+                .entry(texture.id())
+                .or_insert_with(|| {
+                    if !self.texture_storage.contains_key(&texture.id()) {
+                        self.texture_storage.insert(texture.id(), texture.clone());
+                    }
+                    Vec::new()
+                })
+                .push(ModelInstance {
+                    transform,
+                    color: model.color.into(),
+                    normal: normal_matrix,
+                    scale: model.scale,
+                });
+        });
+    }
+
+    pub fn finish_prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
         let mut previous = self
             .instances
             .iter()
@@ -121,46 +149,12 @@ impl ModelRenderer {
         let mut meshes_used = HashSet::new();
         let mut textures_used = HashSet::new();
 
-        let instances = data
-            .into_iter()
-            .fold(HashMap::new(), |mut acc, (model, transform)| {
-                model.meshes.iter().for_each(|(mesh, texture)| {
-                    let mesh_entry = acc.entry(mesh.id()).or_insert_with(|| {
-                        if !self.mesh_storage.contains_key(&mesh.id()) {
-                            self.mesh_storage.insert(mesh.id(), mesh.clone());
-                        }
-                        meshes_used.insert(mesh.id());
+        self.to_prep.drain().for_each(|(mesh_id, texture_data)| {
+            meshes_used.insert(mesh_id);
 
-                        HashMap::new()
-                    });
-
-                    let rotation = transform.to_scale_rotation_translation().1;
-                    let normal_matrix = glam::Mat3::from_quat(rotation);
-
-                    mesh_entry
-                        .entry(texture.id())
-                        .or_insert_with(|| {
-                            if !self.texture_storage.contains_key(&texture.id()) {
-                                self.texture_storage.insert(texture.id(), texture.clone());
-                            }
-
-                            textures_used.insert(texture.id());
-
-                            Vec::new()
-                        })
-                        .push(ModelInstance {
-                            transform,
-                            color: model.color.into(),
-                            normal: normal_matrix,
-                            scale: model.scale,
-                        });
-                });
-
-                acc
-            });
-
-        instances.into_iter().for_each(|(mesh_id, texture_data)| {
             texture_data.into_iter().for_each(|(texture_id, raw)| {
+                textures_used.insert(texture_id);
+
                 previous.remove(&(mesh_id, texture_id));
 
                 self.instances

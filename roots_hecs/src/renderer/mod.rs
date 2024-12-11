@@ -56,8 +56,6 @@ impl RendererState {
     }
 
     pub fn resize(&mut self, size: Size<u32>) {
-        log::trace!("Resizing window with size {}", size);
-
         if size.width == 0 || size.height == 0 {
             log::warn!(
                 "Invalid Window size. Must be non-zero. New Window size = {}",
@@ -120,6 +118,9 @@ impl RendererState {
             .unwrap()
             .iter_mut()
             .for_each(|pipeline_data| pipeline_data.pipeline.render(&mut render_pass, self, world));
+
+        std::mem::drop(render_pass);
+        encoder.finish(&self.queue);
     }
 }
 

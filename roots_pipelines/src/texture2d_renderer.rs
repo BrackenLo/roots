@@ -55,8 +55,9 @@ pub struct Texture2dRenderer {
     index_buffer: wgpu::Buffer,
     index_count: u32,
 
-    texture_storage: HashMap<TextureId, LoadedTexture>,
+    to_prep: HashMap<TextureId, Vec<TextureInstance>>,
     instances: HashMap<TextureId, tools::InstanceBuffer<TextureInstance>>,
+    texture_storage: HashMap<TextureId, LoadedTexture>,
 }
 
 impl Texture2dRenderer {
@@ -103,42 +104,37 @@ impl Texture2dRenderer {
             vertex_buffer,
             index_buffer,
             index_count,
-            texture_storage,
+
+            to_prep: HashMap::default(),
             instances,
+            texture_storage,
         }
     }
 
-    pub fn prep<'a>(
-        &mut self,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        data: impl IntoIterator<Item = TextureData<'a>>,
-    ) {
-        let mut previous = self.instances.keys().map(|id| *id).collect::<HashSet<_>>();
+    #[inline]
+    pub fn prep_texture(&mut self, data: TextureData) {
+        self.to_prep
+            .entry(data.texture.id())
+            .or_insert_with(|| {
+                if !self.texture_storage.contains_key(&data.texture.id()) {
+                    self.texture_storage
+                        .insert(data.texture.id(), data.texture.clone());
+                }
 
-        let instances = data.into_iter().fold(HashMap::new(), |mut acc, data| {
-            let instance = TextureInstance {
+                Vec::new()
+            })
+            .push(TextureInstance {
                 color: data.color,
                 size: data.size,
                 pos: data.pos,
                 pad: [0; 3],
-            };
+            });
+    }
 
-            acc.entry(data.texture.id())
-                .or_insert_with(|| {
-                    if !self.instances.contains_key(&data.texture.id()) {
-                        self.texture_storage
-                            .insert(data.texture.id(), data.texture.clone());
-                    }
+    pub fn finish_prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
+        let mut previous = self.instances.keys().map(|id| *id).collect::<HashSet<_>>();
 
-                    Vec::new()
-                })
-                .push(instance);
-
-            acc
-        });
-
-        instances.into_iter().for_each(|(id, raw)| {
+        self.to_prep.drain().for_each(|(id, raw)| {
             previous.remove(&id);
 
             self.instances

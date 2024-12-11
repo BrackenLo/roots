@@ -52,7 +52,7 @@ impl<A: HecsApp> roots_runner::RunnerState for StateOuter<A> {
     }
 
     fn resized(&mut self, new_size: roots_common::Size<u32>) {
-        log::trace!("Resizing window. New size = {}", new_size);
+        log::debug!("Resizing window. New size = {}", new_size);
         self.app.resize(&mut self.state, new_size);
         self.state.renderer.resize(new_size);
     }
