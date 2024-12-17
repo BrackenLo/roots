@@ -47,8 +47,11 @@ impl<S: RunnerState> Runner<S> {
         if let Some(modules) = logger_modules {
             #[cfg(target_arch = "wasm32")]
             {
+                // TODO - Look into hooking into specific modules for wasm logging
+                let _ = modules;
                 std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-                console_log::init_with_level(log::Level::Warn).expect("Couldn't initialize logger");
+                console_log::init_with_level(log::Level::Debug)
+                    .expect("Couldn't initialize logger");
             }
             #[cfg(not(target_arch = "wasm32"))]
             {

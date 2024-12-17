@@ -54,14 +54,14 @@ impl LightingManager {
     pub fn new(device: &wgpu::Device) -> Self {
         log::debug!("Creating lighting manager");
 
-        let globals_uniform = tools::buffer(
+        let globals_uniform = tools::create_buffer(
             device,
             tools::BufferType::Uniform,
             "Lighting Globals",
             &[GlobalLightData::default()],
         );
 
-        let light_instances = tools::buffer(
+        let light_instances = tools::create_buffer(
             device,
             tools::BufferType::Storage,
             "Light instances",
@@ -140,7 +140,7 @@ impl LightingManager {
     ) {
         match lights.is_empty() {
             true => {
-                self.light_instances = tools::buffer(
+                self.light_instances = tools::create_buffer(
                     device,
                     tools::BufferType::Storage,
                     "Light instances",
@@ -179,7 +179,7 @@ impl LightingManager {
                 }
 
                 self.light_instance_count = lights.len() as u32;
-                self.light_instances = tools::buffer(
+                self.light_instances = tools::create_buffer(
                     device,
                     tools::BufferType::Storage,
                     "Light instances",

@@ -142,9 +142,10 @@ impl TextBuffer {
         queue: &wgpu::Queue,
         data: &[TextVertex],
     ) {
-        tools::update_instance_buffer(
+        tools::update_buffer_data(
             device,
             queue,
+            tools::BufferType::Instance,
             "Text Vertex Buffer",
             &mut self.vertex_buffer,
             &mut self.vertex_count,

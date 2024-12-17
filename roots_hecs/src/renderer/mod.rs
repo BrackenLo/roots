@@ -34,7 +34,7 @@ impl RendererState {
     pub fn new(window: &Window) -> Self {
         log::info!("Creating renderer");
         let (device, queue, surface, config) =
-            pollster::block_on(RenderCore::new(window.arc(), window.size()))
+            RenderCore::new_blocked(window.clone_arc(), window.size())
                 .unwrap()
                 .break_down();
 

@@ -67,8 +67,9 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn load_mesh(device: &wgpu::Device, vertices: &[ModelVertex], indices: &[u32]) -> Self {
-        let vertex_buffer = tools::buffer(device, tools::BufferType::Vertex, "Mesh", vertices);
-        let index_buffer = tools::buffer(device, tools::BufferType::Index, "Mesh", indices);
+        let vertex_buffer =
+            tools::create_buffer(device, tools::BufferType::Vertex, "Mesh", vertices);
+        let index_buffer = tools::create_buffer(device, tools::BufferType::Index, "Mesh", indices);
         let index_count = indices.len() as u32;
 
         Self {

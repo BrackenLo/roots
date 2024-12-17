@@ -96,8 +96,15 @@ impl<'a> RenderCore<'a> {
         window_size: Size<u32>,
     ) -> anyhow::Result<Self> {
         log::info!("Creating core wgpu renderer components.");
-
         log::debug!("Window inner size = {:?}", window_size);
+
+        let window_size = match window_size.width > 0 && window_size.height > 0 {
+            true => window_size,
+            false => {
+                log::warn!("Provided window size has either 0 width and/or 0 height. Using default of (450, 400).");
+                Size::new(450, 400)
+            }
+        };
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             #[cfg(not(target_arch = "wasm32"))]
@@ -120,16 +127,24 @@ impl<'a> RenderCore<'a> {
 
         log::debug!("Chosen device adapter: {:#?}", adapter.get_info());
 
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    #[cfg(target_arch = "wasm32")]
-                    required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
-                    ..Default::default()
-                },
-                None,
-            )
-            .await?;
+        let device_future = adapter.request_device(
+            &wgpu::DeviceDescriptor {
+                #[cfg(target_arch = "wasm32")]
+                required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
+                ..Default::default()
+            },
+            None,
+        );
+
+        // TODO - This WGPU error cannot be returned on wasm - Try to return custom type
+        #[cfg(target_arch = "wasm32")]
+        let (device, queue) = match device_future.await {
+            Ok(result) => result,
+            Err(e) => panic!("{}", e),
+        };
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let (device, queue) = device_future.await?;
 
         let surface_capabilities = surface.get_capabilities(&adapter);
 
@@ -153,7 +168,7 @@ impl<'a> RenderCore<'a> {
 
         surface.configure(&device, &config);
 
-        log::debug!("Successfully created core wgpu components.");
+        log::info!("Successfully created core wgpu components.");
 
         Ok(Self {
             device,
@@ -161,6 +176,14 @@ impl<'a> RenderCore<'a> {
             surface,
             config,
         })
+    }
+
+    #[inline]
+    pub fn new_blocked(
+        window: impl Into<SurfaceTarget<'a>>,
+        window_size: Size<u32>,
+    ) -> anyhow::Result<Self> {
+        pollster::block_on(Self::new(window, window_size))
     }
 
     #[inline]
@@ -214,6 +237,13 @@ impl<'a> DerefMut for RenderPass<'a> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl<'a> RenderPass<'a> {
+    #[inline]
+    pub fn drop(self) {
+        _ = self;
     }
 }
 
@@ -317,6 +347,12 @@ impl RenderEncoder {
             occlusion_query_set: None,
         });
 
+        RenderPass(render_pass)
+    }
+
+    #[inline]
+    pub fn begin_render_pass_wgpu(&mut self, desc: &wgpu::RenderPassDescriptor) -> RenderPass {
+        let render_pass = self.encoder.begin_render_pass(desc);
         RenderPass(render_pass)
     }
 }

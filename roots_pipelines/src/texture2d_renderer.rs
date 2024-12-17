@@ -81,14 +81,14 @@ impl Texture2dRenderer {
             tools::RenderPipelineDescriptor::default().with_depth_stencil(),
         );
 
-        let vertex_buffer = tools::buffer(
+        let vertex_buffer = tools::create_buffer(
             device,
             tools::BufferType::Vertex,
             "Texture",
             &TEXTURE_RECT_VERTICES,
         );
 
-        let index_buffer = tools::buffer(
+        let index_buffer = tools::create_buffer(
             device,
             tools::BufferType::Index,
             "Texture",

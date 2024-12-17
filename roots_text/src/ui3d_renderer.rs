@@ -194,7 +194,7 @@ where
         if !self.instances.contains_key(&id) {
             log::trace!("Inserting new ui3d data");
 
-            let ui_uniform_buffer = tools::buffer(
+            let ui_uniform_buffer = tools::create_buffer(
                 device,
                 tools::BufferType::Uniform,
                 "Ui",
@@ -219,7 +219,7 @@ where
                 }],
             });
 
-            let ui_position_uniform_buffer = tools::buffer(
+            let ui_position_uniform_buffer = tools::create_buffer(
                 device,
                 tools::BufferType::Uniform,
                 "Ui Position",

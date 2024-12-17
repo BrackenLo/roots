@@ -77,7 +77,6 @@ pub fn reset_input<T>(input: &mut Input<T>) {
 #[derive(Debug, Default)]
 pub struct MouseInput {
     position: glam::Vec2,
-    screen_position: glam::Vec2,
     motion_delta: glam::Vec2,
     scroll: glam::Vec2,
 }
@@ -91,11 +90,6 @@ impl MouseInput {
     #[inline]
     pub fn position(&self) -> glam::Vec2 {
         self.position
-    }
-
-    #[inline]
-    pub fn screen_position(&self) -> glam::Vec2 {
-        self.screen_position
     }
 
     #[inline]

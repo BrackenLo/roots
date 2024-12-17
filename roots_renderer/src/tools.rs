@@ -150,30 +150,47 @@ pub enum BufferType {
     Instance,
     Uniform,
     Storage,
+    VertexDynamic,
+    IndexDynamic,
 }
 
-pub fn buffer<D: bytemuck::Pod>(
+impl BufferType {
+    #[inline]
+    pub fn get_data(&self) -> (&str, wgpu::BufferUsages) {
+        match self {
+            BufferType::Vertex => ("Vertex", wgpu::BufferUsages::VERTEX),
+            BufferType::Index => ("Index", wgpu::BufferUsages::INDEX),
+            BufferType::Instance => (
+                "Instance",
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            ),
+            BufferType::Uniform => (
+                "Uniform",
+                wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            ),
+            BufferType::Storage => (
+                "Storage",
+                wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            ),
+            BufferType::VertexDynamic => (
+                "Vertex",
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            ),
+            BufferType::IndexDynamic => (
+                "Index",
+                wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            ),
+        }
+    }
+}
+
+pub fn create_buffer<D: bytemuck::Pod>(
     device: &wgpu::Device,
     buffer_type: BufferType,
     label: &str,
     data: &[D],
 ) -> wgpu::Buffer {
-    let (name, usage) = match buffer_type {
-        BufferType::Vertex => ("Vertex", wgpu::BufferUsages::VERTEX),
-        BufferType::Index => ("Index", wgpu::BufferUsages::INDEX),
-        BufferType::Instance => (
-            "Instance",
-            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-        ),
-        BufferType::Uniform => (
-            "Uniform",
-            wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        ),
-        BufferType::Storage => (
-            "Storage",
-            wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-        ),
-    };
+    let (name, usage) = buffer_type.get_data();
 
     device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some(&format!("{} {} Buffer", label, name)),
@@ -184,49 +201,39 @@ pub fn buffer<D: bytemuck::Pod>(
 
 //====================================================================
 
-pub fn update_instance_buffer<T: bytemuck::Pod>(
+// TODO - Find better name - Not always used with just instance buffers
+pub fn update_buffer_data<T: bytemuck::Pod>(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
 
+    buffer_type: BufferType,
     label: &str,
     buffer: &mut wgpu::Buffer,
-    instance_count: &mut u32,
+    buffer_size: &mut u32,
 
     data: &[T],
 ) {
     if data.len() == 0 {
         // Nothing to update
-        if *instance_count != 0 {
+        if *buffer_size != 0 {
             // Empty buffer and reset instance count
-            *buffer = create_instance_buffer(device, label, data);
-            *instance_count = 0;
+            *buffer = create_buffer(device, buffer_type, label, data);
+            *buffer_size = 0;
         }
 
         return;
     }
 
     // We can fit all data inside existing buffer
-    if data.len() <= *instance_count as usize {
+    if data.len() <= *buffer_size as usize {
         queue.write_buffer(buffer, 0, bytemuck::cast_slice(data));
-        *instance_count = data.len() as u32; // TODO - add additional variable for buffer size
+        *buffer_size = data.len() as u32; // TODO - add additional variable for buffer size
         return;
     }
 
     // Buffer is too small to fit new data. Create a new bigger one.
-    *instance_count = data.len() as u32;
-    *buffer = create_instance_buffer(device, label, data);
-}
-
-pub fn create_instance_buffer<T: bytemuck::Pod>(
-    device: &wgpu::Device,
-    label: &str,
-    data: &[T],
-) -> wgpu::Buffer {
-    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some(&format!("{} Instance Buffer", label)),
-        contents: bytemuck::cast_slice(data),
-        usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-    })
+    *buffer_size = data.len() as u32;
+    *buffer = create_buffer(device, buffer_type, label, data);
 }
 
 //====================================================================
@@ -243,7 +250,7 @@ impl<T: bytemuck::Pod> InstanceBuffer<T> {
     pub fn new(device: &wgpu::Device, data: &[T]) -> Self {
         Self {
             phantom: PhantomData,
-            buffer: buffer(
+            buffer: create_buffer(
                 device,
                 BufferType::Instance,
                 &format!("{} Instance Buffer", std::any::type_name::<T>()),
@@ -255,11 +262,11 @@ impl<T: bytemuck::Pod> InstanceBuffer<T> {
 
     #[inline]
     pub fn update(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, data: &[T]) {
-        update_instance_buffer(
+        update_buffer_data(
             device,
             queue,
-            &format!("{} Instance Buffer", std::any::type_name::<T>()),
-            // "Instance Buffer",
+            BufferType::Instance,
+            &format!("{}", std::any::type_name::<T>()),
             &mut self.buffer,
             &mut self.count,
             data,

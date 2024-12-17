@@ -12,9 +12,8 @@ impl Window {
     pub fn new(event_loop: &ActiveEventLoop, window_attributes: Option<WindowAttributes>) -> Self {
         log::info!("Creating new window");
 
-        let window = event_loop
-            .create_window(window_attributes.unwrap_or_default())
-            .unwrap();
+        let attributes = window_attributes.unwrap_or_default();
+        let window = event_loop.create_window(attributes).unwrap();
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -31,7 +30,7 @@ impl Window {
             web_sys::window()
                 .and_then(|win| win.document())
                 .and_then(|doc| {
-                    let dst = doc.get_element_by_id("app")?;
+                    let dst = doc.get_element_by_id("roots_app")?;
                     let canvas = web_sys::Element::from(window.canvas()?);
                     dst.append_child(&canvas).ok()?;
                     Some(())
@@ -76,7 +75,12 @@ impl Window {
     }
 
     #[inline]
-    pub fn arc(&self) -> Arc<winit::window::Window> {
+    pub fn arc(&self) -> &Arc<winit::window::Window> {
+        &self.0
+    }
+
+    #[inline]
+    pub fn clone_arc(&self) -> Arc<winit::window::Window> {
         self.0.clone()
     }
 }

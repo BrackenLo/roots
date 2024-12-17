@@ -10,11 +10,11 @@ use roots_renderer::{
 #[repr(C)]
 #[derive(bytemuck::Pod, bytemuck::Zeroable, Clone, Copy, Debug)]
 pub struct LineInstance {
-    color: glam::Vec4,
-    pos1: glam::Vec3,
-    pos2: glam::Vec3,
-    thickness: f32,
-    pad: [u32; 1],
+    pub color: glam::Vec4,
+    pub pos1: glam::Vec3,
+    pub pos2: glam::Vec3,
+    pub thickness: f32,
+    pub pad: [u32; 1],
 }
 
 impl Default for LineInstance {
@@ -99,8 +99,26 @@ impl LineRenderer {
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
         shared: &SharedRenderResources,
+        use_depth: bool,
     ) -> Self {
         log::debug!("Creating Line Renderer");
+
+        // TODO - Tidy this section
+        let fragment_targets = [Some(wgpu::ColorTargetState {
+            format: config.format,
+            blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+            write_mask: wgpu::ColorWrites::all(),
+        })];
+
+        let descriptor = tools::RenderPipelineDescriptor {
+            fragment_targets: Some(&fragment_targets),
+            ..Default::default()
+        };
+
+        let descriptor = match use_depth {
+            true => descriptor.with_depth_stencil(),
+            false => descriptor,
+        };
 
         let pipeline = tools::create_pipeline(
             device,
@@ -109,21 +127,14 @@ impl LineRenderer {
             &[shared.camera_bind_group_layout()],
             &[LineVertex::desc(), LineInstance::desc()],
             include_str!("shaders/line.wgsl"),
-            tools::RenderPipelineDescriptor {
-                fragment_targets: Some(&[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
-                    write_mask: wgpu::ColorWrites::all(),
-                })]),
-                ..Default::default()
-            }
-            .with_depth_stencil(),
+            descriptor,
         );
 
         let vertex_buffer =
-            tools::buffer(device, tools::BufferType::Vertex, "Line", &LINE_VERTICES);
+            tools::create_buffer(device, tools::BufferType::Vertex, "Line", &LINE_VERTICES);
 
-        let index_buffer = tools::buffer(device, tools::BufferType::Index, "Line", &LINE_INDICES);
+        let index_buffer =
+            tools::create_buffer(device, tools::BufferType::Index, "Line", &LINE_INDICES);
         let index_count = LINE_INDICES.len() as u32;
 
         let instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -153,9 +164,10 @@ impl LineRenderer {
 
     #[inline]
     pub fn finish_prep(&mut self, device: &wgpu::Device, queue: &wgpu::Queue) {
-        tools::update_instance_buffer(
+        tools::update_buffer_data(
             device,
             queue,
+            tools::BufferType::Instance,
             "Line",
             &mut self.instance_buffer,
             &mut self.instance_count,

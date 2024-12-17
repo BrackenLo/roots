@@ -127,7 +127,7 @@ impl Pipeline for Texture2dRenderer {
 impl Pipeline for LineRenderer {
     #[inline]
     fn new(state: &RendererState) -> Self {
-        Self::new(&state.device, &state.config, &state.shared)
+        Self::new(&state.device, &state.config, &state.shared, true)
     }
 
     #[inline]

@@ -164,9 +164,13 @@ impl OrthographicCamera {
     }
 
     pub fn set_size(&mut self, width: f32, height: f32) {
-        let half_width = width / 2.;
-        let half_height = height / 2.;
+        self.left = 0.;
+        self.right = width;
+        self.bottom = 0.;
+        self.top = height;
+    }
 
+    pub fn set_size_centered(&mut self, half_width: f32, half_height: f32) {
         self.left = -half_width;
         self.right = half_width;
         self.top = half_height;
